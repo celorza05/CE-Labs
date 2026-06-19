@@ -15,7 +15,8 @@ from __future__ import annotations
 
 import json
 import logging
-import math
+import re
+import shutil
 import statistics
 import subprocess
 
@@ -29,38 +30,26 @@ def _crop_x(center: float, crop_w: float, src_w: float) -> int:
     return int(max(0.0, min(center - crop_w / 2.0, src_w - crop_w)))
 
 
-def bucket_windows(samples: list[tuple[float, float]], duration: float, crop_w: float,
-                   src_w: float, bucket: float = 1.0, merge_tol: int = 20) -> list[tuple[float, float, int]]:
-    """Turn (time, face_x_center) samples into (t0, t1, crop_x) windows.
+def shots_from_cuts(cuts: list[float], duration: float) -> list[tuple[float, float]]:
+    """Turn scene-cut times into (t0, t1) shot windows spanning [0, duration]."""
+    bounds = sorted({0.0, duration, *(c for c in cuts if 0.0 < c < duration)})
+    return [(bounds[i], bounds[i + 1]) for i in range(len(bounds) - 1)]
 
-    Samples are grouped into ``bucket``-second windows (median per bucket); gaps
-    hold the previous position; adjacent windows within ``merge_tol`` px are merged
-    to avoid jitter.
-    """
-    by_bucket: dict[int, list[float]] = {}
-    for t, c in samples:
-        by_bucket.setdefault(int(t // bucket), []).append(c)
 
-    n = max(1, math.ceil(duration / bucket))
+def crop_per_shot(samples: list[tuple[float, float]], shots: list[tuple[float, float]],
+                  crop_w: float, src_w: float) -> list[tuple[float, float, int]]:
+    """One stable crop x per shot (median face center within it; hold across gaps)."""
+    windows: list[tuple[float, float, int]] = []
     last_x: int | None = None
-    raw: list[tuple[float, float, int]] = []
-    for i in range(n):
-        t0 = i * bucket
-        t1 = min((i + 1) * bucket, duration)
-        if i in by_bucket:
-            x = _crop_x(statistics.median(by_bucket[i]), crop_w, src_w)
+    for t0, t1 in shots:
+        centers = [c for (t, c) in samples if t0 <= t < t1]
+        if centers:
+            x = _crop_x(statistics.median(centers), crop_w, src_w)
             last_x = x
         else:
             x = last_x if last_x is not None else _crop_x(src_w / 2.0, crop_w, src_w)
-        raw.append((t0, t1, x))
-
-    merged: list[list[float]] = []
-    for t0, t1, x in raw:
-        if merged and abs(merged[-1][2] - x) <= merge_tol:
-            merged[-1][1] = t1  # extend the previous window
-        else:
-            merged.append([t0, t1, x])
-    return [(a, b, int(c)) for a, b, c in merged]
+        windows.append((t0, t1, x))
+    return windows
 
 
 def build_x_expr(windows: list[tuple[float, float, int]]) -> str:
@@ -86,6 +75,24 @@ def probe_resolution(media: str) -> tuple[int, int] | None:
     except Exception as exc:
         log.debug("ffprobe resolution failed: %s", exc)
     return None
+
+
+def detect_scene_cuts(media: str, start: float, duration: float, threshold: float) -> list[float]:
+    """Clip-relative times where the camera cuts, via ffmpeg's scene score."""
+    exe = shutil.which(config.FFMPEG_BIN)
+    if exe is None:
+        return []
+    cmd = [
+        exe, "-hide_banner", "-ss", f"{start}", "-t", f"{duration}", "-i", media,
+        "-filter:v", f"select='gt(scene,{threshold})',showinfo", "-an", "-f", "null", "-",
+    ]
+    try:
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=config.TIMEOUT)
+    except Exception as exc:
+        log.debug("scene detection failed: %s", exc)
+        return []
+    cuts = [float(m) for m in re.findall(r"pts_time:([0-9.]+)", out.stderr)]
+    return sorted({c for c in cuts if 0.0 < c < duration})
 
 
 def face_centers(media: str, start: float, duration: float, sample_fps: float) -> list[tuple[float, float]]:
@@ -130,7 +137,9 @@ def crop_filter(media: str, start: float, duration: float) -> str | None:
         log.info("no faces detected; using center crop")
         return None
 
-    windows = bucket_windows(samples, duration, crop_w, src_w)
+    cuts = detect_scene_cuts(media, start, duration, config.REFRAME_SCENE_THRESHOLD)
+    shots = shots_from_cuts(cuts, duration)
+    windows = crop_per_shot(samples, shots, crop_w, src_w)
     expr = build_x_expr(windows)
-    log.info("face reframe: %d face samples, %d crop windows", len(samples), len(windows))
+    log.info("face reframe: %d face samples, %d shots (one stable crop each)", len(samples), len(windows))
     return f"crop=w={crop_w}:h={src_h}:x='{expr}':y=0"
