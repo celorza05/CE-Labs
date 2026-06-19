@@ -56,6 +56,10 @@ SUBREDDITS: list[str] = _env_list(
     ["LocalLLaMA", "artificial", "MachineLearning", "OpenAI", "singularity"],
 )
 REDDIT_LIMIT: int = _env_int("SCOUT_REDDIT_LIMIT", 25)
+# Reddit blocks anonymous JSON from many IPs. Set these (free "script" app at
+# https://www.reddit.com/prefs/apps) to fetch via authenticated OAuth instead.
+REDDIT_CLIENT_ID: str = os.getenv("SCOUT_REDDIT_CLIENT_ID", "")
+REDDIT_CLIENT_SECRET: str = os.getenv("SCOUT_REDDIT_CLIENT_SECRET", "")
 
 # --- RSS ------------------------------------------------------------------
 RSS_FEEDS: list[str] = _env_list(
@@ -85,6 +89,9 @@ ENGAGEMENT_WEIGHT: float = 0.7
 RECENCY_WEIGHT: float = 0.3
 # Age (hours) at which the recency score decays to roughly zero.
 RECENCY_HALFLIFE_HOURS: float = float(os.getenv("SCOUT_RECENCY_HALFLIFE_HOURS", "36"))
+# Diversity cap: at most this many items from any single source (e.g. one RSS
+# feed or one subreddit) in the final ranked list. 0 disables the cap.
+MAX_PER_SOURCE: int = _env_int("SCOUT_MAX_PER_SOURCE", 6)
 
 # Where ranked trends are written.
 OUTPUT_DIR: str = os.getenv("SCOUT_OUTPUT_DIR", "data/trends")

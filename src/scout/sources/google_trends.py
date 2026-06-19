@@ -1,13 +1,12 @@
-"""Google Trends via ``pytrends`` (unofficial).
+"""Google Trends via the official Trending Now RSS feed.
 
-pytrends scrapes an undocumented endpoint, so it's the flakiest source: it can
-rate-limit (HTTP 429) or change shape without notice. It is therefore optional
-and fails soft — if pytrends isn't installed or the request fails, we log and
-return nothing rather than breaking the run.
+We used to use ``pytrends`` (an unofficial scraper), but its endpoints break
+often — it was returning HTTP 404. Google publishes a real RSS feed of trending
+searches per region, which is stable and needs no library beyond ``feedparser``.
 
-We pull the realtime trending stories for the configured region; the niche
-filter downstream keeps only the AI/tech ones. Trends have no engagement number
-and no per-item timestamp, so they rank on source weight and a neutral recency.
+The feed is general (all topics), so the niche filter downstream keeps only the
+AI/tech ones. Trends carry no engagement number and no reliable timestamp, so
+they rank on source weight and a neutral recency.
 """
 
 from __future__ import annotations
@@ -16,36 +15,45 @@ import logging
 
 from .. import config
 from ..models import TrendItem
+from .http import session
 
 log = logging.getLogger("scout.sources.google_trends")
 
 
 def fetch() -> list[TrendItem]:
     try:
-        from pytrends.request import TrendReq
+        import feedparser
     except ImportError:
-        log.warning("pytrends not installed; skipping Google Trends")
+        log.warning("feedparser not installed; skipping Google Trends")
         return []
 
+    url = f"https://trends.google.com/trending/rss?geo={config.GOOGLE_TRENDS_GEO}"
     try:
-        pytrends = TrendReq(hl="en-US", tz=0)
-        df = pytrends.realtime_trending_searches(pn=config.GOOGLE_TRENDS_GEO)
-    except Exception as exc:  # network / rate-limit / API drift
+        resp = session().get(url, timeout=config.HTTP_TIMEOUT)
+        resp.raise_for_status()
+    except Exception as exc:
         log.warning("Google Trends request failed: %s", exc)
         return []
 
+    feed = feedparser.parse(resp.content)
     items: list[TrendItem] = []
-    for _, row in df.iterrows():
-        title = str(row.get("title", "")).strip()
+    for entry in feed.entries:
+        title = (entry.get("title") or "").strip()
         if not title:
             continue
-        entity_names = row.get("entityNames")
-        summary = ", ".join(entity_names) if isinstance(entity_names, list) else ""
+        # The feed nests related news headlines; fold them into the summary so
+        # the niche filter has more text to match against.
+        news_titles = [
+            n.get("ht_news_item_title", "")
+            for n in entry.get("ht_news_item", [])
+            if isinstance(n, dict)
+        ]
+        summary = "; ".join(t for t in news_titles if t)
         query = title.replace(" ", "+")
         items.append(
             TrendItem(
                 title=title,
-                url=f"https://trends.google.com/trends/explore?q={query}",
+                url=f"https://trends.google.com/trends/explore?q={query}&geo={config.GOOGLE_TRENDS_GEO}",
                 source="google_trends",
                 raw_score=0.0,
                 summary=summary,

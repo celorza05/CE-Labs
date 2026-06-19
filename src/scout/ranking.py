@@ -69,10 +69,30 @@ def rank(items: list[TrendItem]) -> list[TrendItem]:
     items.sort(key=lambda it: it.score, reverse=True)
 
     deduped = _dedupe(items)
-    top = deduped[: config.TOP_N]
+    diversified = _apply_source_cap(deduped)
+    top = diversified[: config.TOP_N]
     for i, item in enumerate(top, start=1):
         item.rank = i
     return top
+
+
+def _apply_source_cap(items: list[TrendItem]) -> list[TrendItem]:
+    """Keep at most MAX_PER_SOURCE items from any one source, for variety.
+
+    Items are assumed pre-sorted by score, so the strongest survive the cap.
+    """
+    cap = config.MAX_PER_SOURCE
+    if cap <= 0:
+        return items
+    counts: dict[str, int] = {}
+    result: list[TrendItem] = []
+    for item in items:
+        n = counts.get(item.source, 0)
+        if n >= cap:
+            continue
+        counts[item.source] = n + 1
+        result.append(item)
+    return result
 
 
 def _dedupe(items: list[TrendItem]) -> list[TrendItem]:

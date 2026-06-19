@@ -1,17 +1,24 @@
-"""Reddit hot posts via the public ``.json`` endpoints (no auth for basic read).
+"""Reddit hot posts from AI subreddits.
 
-Reddit rate-limits/blocks anonymous requests without a descriptive User-Agent,
-so the shared session sets one. Engagement score = upvotes + comments. Stickied
-mod posts are skipped.
+Reddit blocks anonymous ``.json`` requests from many IPs (HTTP 403). If
+``SCOUT_REDDIT_CLIENT_ID`` / ``SCOUT_REDDIT_CLIENT_SECRET`` are set (a free
+"script" app at https://www.reddit.com/prefs/apps), Scout fetches via
+authenticated OAuth, which is reliable. Otherwise it falls back to the public
+endpoint and fails soft if that's blocked.
+
+Engagement score = upvotes + comments. Stickied mod posts are skipped.
 """
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 
 from .. import config
 from ..models import TrendItem
-from .http import get_json
+from .http import session
+
+log = logging.getLogger("scout.sources.reddit")
 
 
 def _post_to_item(subreddit: str, post: dict) -> TrendItem | None:
@@ -47,14 +54,44 @@ def _post_to_item(subreddit: str, post: dict) -> TrendItem | None:
     )
 
 
+def _oauth_token() -> str | None:
+    """Fetch an app-only OAuth token, or None if credentials aren't configured."""
+    if not (config.REDDIT_CLIENT_ID and config.REDDIT_CLIENT_SECRET):
+        return None
+    resp = session().post(
+        "https://www.reddit.com/api/v1/access_token",
+        auth=(config.REDDIT_CLIENT_ID, config.REDDIT_CLIENT_SECRET),
+        data={"grant_type": "client_credentials"},
+        timeout=config.HTTP_TIMEOUT,
+    )
+    resp.raise_for_status()
+    return resp.json().get("access_token")
+
+
+def _fetch_subreddit(subreddit: str, token: str | None) -> list[TrendItem]:
+    if token:
+        url = f"https://oauth.reddit.com/r/{subreddit}/hot?limit={config.REDDIT_LIMIT}"
+        headers = {"Authorization": f"bearer {token}"}
+    else:
+        url = f"https://www.reddit.com/r/{subreddit}/hot.json?limit={config.REDDIT_LIMIT}"
+        headers = {}
+
+    resp = session().get(url, headers=headers, timeout=config.HTTP_TIMEOUT)
+    resp.raise_for_status()
+    children = resp.json().get("data", {}).get("children", [])
+    items = [_post_to_item(subreddit, post) for post in children]
+    return [it for it in items if it is not None]
+
+
 def fetch() -> list[TrendItem]:
+    token = _oauth_token()
+    if token is None:
+        log.info("no Reddit OAuth credentials; using public endpoint (may be blocked)")
+
     items: list[TrendItem] = []
     for subreddit in config.SUBREDDITS:
-        url = f"https://www.reddit.com/r/{subreddit}/hot.json?limit={config.REDDIT_LIMIT}"
-        data = get_json(url)
-        children = data.get("data", {}).get("children", [])
-        for post in children:
-            item = _post_to_item(subreddit, post)
-            if item is not None:
-                items.append(item)
+        try:
+            items.extend(_fetch_subreddit(subreddit, token))
+        except Exception as exc:  # one bad subreddit shouldn't drop the rest
+            log.warning("r/%s failed: %s", subreddit, exc)
     return items
