@@ -42,7 +42,7 @@ def generate(trends: list[dict]) -> list[VideoScript]:
     response = client.messages.parse(
         model=config.MODEL,
         max_tokens=config.MAX_TOKENS,
-        system=system_prompt(config.VOICE, config.SCRIPTS_PER_RUN),
+        system=system_prompt(config.VOICE, config.SCRIPTS_PER_RUN, config.MAX_PER_COMPANY),
         messages=[{"role": "user", "content": build_user_prompt(candidates, config.SCRIPTS_PER_RUN)}],
         output_format=ScriptBatch,
     )

@@ -54,7 +54,7 @@ def main(argv: list[str] | None = None) -> int:
         trends = generator.load_trends(args.input)
         candidates = trends[: config.CANDIDATE_POOL]
         print("===== SYSTEM =====")
-        print(system_prompt(config.VOICE, config.SCRIPTS_PER_RUN))
+        print(system_prompt(config.VOICE, config.SCRIPTS_PER_RUN, config.MAX_PER_COMPANY))
         print("\n===== USER =====")
         print(build_user_prompt(candidates, config.SCRIPTS_PER_RUN))
         return 0

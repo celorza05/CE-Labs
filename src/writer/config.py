@@ -46,6 +46,10 @@ CANDIDATE_POOL: int = _env_int("WRITER_CANDIDATE_POOL", 12)
 # Voice/style key — see prompts.VOICES.
 VOICE: str = os.getenv("WRITER_VOICE", "punchy")
 
+# Don't script more than this many videos about the same company/product per run,
+# so one brand can't dominate a day's content.
+MAX_PER_COMPANY: int = _env_int("WRITER_MAX_PER_COMPANY", 2)
+
 # I/O paths.
 TRENDS_INPUT: str = os.getenv("WRITER_TRENDS_INPUT", "data/trends/latest.json")
 OUTPUT_DIR: str = os.getenv("WRITER_OUTPUT_DIR", "data/scripts")

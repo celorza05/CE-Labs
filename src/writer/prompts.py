@@ -29,7 +29,7 @@ VOICES: dict[str, str] = {
 }
 
 
-def system_prompt(voice: str, n: int) -> str:
+def system_prompt(voice: str, n: int, max_per_company: int = 2) -> str:
     style = VOICES.get(voice, VOICES["punchy"])
     return f"""You are the Writer for a faceless, AI-generated short-form video channel.
 
@@ -50,6 +50,18 @@ news, or financial advice — they match "AI" as a keyword but make weak, risky 
 videos. Prefer concrete tool launches, model releases, capabilities, and "here's \
 what this means for you" stories. Better to return FEWER strong scripts than to \
 pad with weak ones.
+
+FACT FIDELITY (critical — this protects the channel): You only have each trend's \
+TITLE and a short SUMMARY. Write only claims that are supported by that provided \
+text. Do NOT invent or guess specific figures, dollar amounts, dates, quotes, \
+product names, company plans, or features that aren't in the source. If a punchy \
+detail isn't in the source, leave it out or phrase it generally ("reportedly", \
+"a major player", "a big opportunity") rather than fabricating a specific. A \
+confidently wrong fact is exactly what gets an AI-news channel flagged — accuracy \
+beats punchiness every time.
+
+DIVERSITY: Don't choose more than {max_per_company} videos about the same company \
+or product in one run. Spread the picks across different subjects.
 
 For each trend you choose, write:
 - angle: the sharp, specific take in one line
