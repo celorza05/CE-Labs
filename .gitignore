@@ -27,3 +27,4 @@ client_secret.json
 .DS_Store
 .idea/
 .vscode/
+data/clips/*.json
