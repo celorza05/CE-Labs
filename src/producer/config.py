@@ -33,3 +33,20 @@ MODEL: str = os.getenv("PRODUCER_HIGGSFIELD_MODEL", "")
 # I/O paths.
 SCRIPTS_INPUT: str = os.getenv("PRODUCER_SCRIPTS_INPUT", "data/scripts/latest.json")
 OUTPUT_DIR: str = os.getenv("PRODUCER_OUTPUT_DIR", "data/jobs")
+ASSETS_DIR: str = os.getenv("PRODUCER_ASSETS_DIR", "data/assets")
+
+# --- Higgsfield CLI submission ----------------------------------------------
+# Official CLI: `npm install -g @higgsfield/cli`, then `higgsfield auth login`.
+# Command name (alias: "higgs").
+CLI_BIN: str = os.getenv("PRODUCER_CLI_BIN", "higgsfield")
+# Video model id. `higgsfield model list` shows what's available.
+CLI_MODEL: str = os.getenv("PRODUCER_HIGGSFIELD_MODEL", "kling3_0")
+CLI_MODE: str = os.getenv("PRODUCER_CLI_MODE", "pro")
+CLI_SOUND: str = os.getenv("PRODUCER_CLI_SOUND", "off")
+# Aspect-ratio flag name (verify against `higgsfield generate create --help`;
+# set blank to omit if the CLI derives ratio another way).
+CLI_ASPECT_FLAG: str = os.getenv("PRODUCER_CLI_ASPECT_FLAG", "--aspect-ratio")
+# Any extra flags to append, space-separated (e.g. "--quality high").
+CLI_EXTRA_FLAGS: str = os.getenv("PRODUCER_CLI_EXTRA_FLAGS", "")
+# Seconds to wait for one generation before giving up.
+CLI_TIMEOUT: int = _env_int("PRODUCER_CLI_TIMEOUT", 600)

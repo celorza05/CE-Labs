@@ -90,7 +90,7 @@ Status legend: [ ] not started · [~] in progress · [x] done
 |--------|---------|--------|-------|
 | `trend-fetcher` | Scout | [x] | Pull from AI-specific sources, filter to niche, dedupe, rank. Runs on a schedule. (`src/scout/`) |
 | `prompt-generator` | Writer | [x] | Calls the Anthropic API so Claude writes the hook + script + Higgsfield prompt. (`src/writer/`) |
-| `higgsfield-client` | Producer | [ ] | Calls Higgsfield generation API, polls for completion, downloads finished assets. |
+| `higgsfield-client` | Producer | [x] | Plans jobs from scripts; generates + downloads video via the official Higgsfield CLI. (`src/producer/`) |
 | `upload-youtube` | Publisher | [ ] | YouTube Data API v3 (`videos.insert`). Real, scriptable API. |
 | `upload-tiktok` | Publisher | [ ] | **Gated** — see §6. Manual hand-off until/unless API access is approved. |
 | `orchestrator` | Orchestrator | [ ] | Sequences stages, posts to Slack, enforces approval gate. Lives in Cowork. |

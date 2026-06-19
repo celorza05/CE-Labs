@@ -42,9 +42,10 @@ class GenerationJob:
     hook: str = ""
 
     # Filled in by the submission step:
-    status: str = "pending"  # pending | submitted | completed | failed
+    status: str = "pending"  # pending | completed | failed
     higgsfield_job_id: str | None = None
-    asset_url: str | None = None
+    asset_url: str | None = None  # remote URL returned by Higgsfield
+    asset_path: str | None = None  # local file the asset was downloaded to
     error: str | None = None
 
     created_at: str = field(default_factory=_now_iso)
