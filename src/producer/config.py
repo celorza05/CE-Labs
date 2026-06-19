@@ -47,7 +47,10 @@ CLI_SOUND: str = os.getenv("PRODUCER_CLI_SOUND", "off")
 # param is `aspect_ratio` (underscore) — verified via `higgsfield model get kling3_0`.
 # Set blank to omit if a model derives ratio another way.
 CLI_ASPECT_FLAG: str = os.getenv("PRODUCER_CLI_ASPECT_FLAG", "--aspect_ratio")
+# How long the CLI's own --wait blocks for a generation to finish (CLI duration
+# string, e.g. "15m"). Blank to omit the flag and use the CLI's default.
+CLI_WAIT_TIMEOUT: str = os.getenv("PRODUCER_CLI_WAIT_TIMEOUT", "15m")
 # Any extra flags to append, space-separated (e.g. "--quality high").
 CLI_EXTRA_FLAGS: str = os.getenv("PRODUCER_CLI_EXTRA_FLAGS", "")
-# Seconds to wait for one generation before giving up.
-CLI_TIMEOUT: int = _env_int("PRODUCER_CLI_TIMEOUT", 600)
+# Our subprocess kill deadline (seconds). Keep above CLI_WAIT_TIMEOUT.
+CLI_TIMEOUT: int = _env_int("PRODUCER_CLI_TIMEOUT", 1080)

@@ -51,7 +51,10 @@ def build_command(job: GenerationJob) -> list[str]:
         cmd += ["--sound", config.CLI_SOUND]
     if config.CLI_ASPECT_FLAG:
         cmd += [config.CLI_ASPECT_FLAG, job.aspect_ratio]
-    cmd += ["--wait", "--json"]
+    cmd += ["--wait"]
+    if config.CLI_WAIT_TIMEOUT.strip():
+        cmd += ["--wait-timeout", config.CLI_WAIT_TIMEOUT]
+    cmd += ["--json"]
     if config.CLI_EXTRA_FLAGS.strip():
         cmd += shlex.split(config.CLI_EXTRA_FLAGS)
     return cmd
