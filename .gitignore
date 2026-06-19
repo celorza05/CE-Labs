@@ -29,3 +29,6 @@ client_secret.json
 .vscode/
 data/clips/*.json
 data/clips/media/
+data/clips/out/*.mp4
+data/clips/out/*.ass
+data/clips/out/*.json

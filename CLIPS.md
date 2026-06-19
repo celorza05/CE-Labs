@@ -62,13 +62,13 @@ source (rights-cleared) ─► Transcribe ─► Select clips (Claude) ─► Cu
 
 ### Stages (new unless noted)
 
-| Stage | Job | Likely tooling |
-|-------|-----|----------------|
-| **Sourcer** | Take a rights-cleared source file/URL; pull the audio/video. | local files; `yt-dlp` **only** for content you're licensed to use |
-| **Transcriber** | Timestamped transcript of the audio. | OpenAI Whisper (local) or a transcription API |
-| **Clipper** | Claude reads the transcript and picks the strongest 20–60s moments → clip specs (start/end, hook, caption, hashtags). | Anthropic API (like the Writer) |
-| **Cutter** | Cut each segment, reframe to 9:16, burn in captions. | `ffmpeg`; or Higgsfield's clip tools (see below) |
-| **Publisher** ♻ | Upload to YouTube / TikTok. | existing `src/publisher/` |
+| Stage | Job | Tooling | Status |
+|-------|-----|---------|--------|
+| **Sourcer** | Take a rights-cleared source file/URL; pull the audio/video. | YouTube (`yt-dlp`), local files, podcast RSS | ✅ `src/sourcer/` |
+| **Transcriber** | Timestamped transcript of the audio. | local OpenAI Whisper | ✅ `src/transcriber/` |
+| **Clipper** | Claude reads the transcript and picks the strongest 20–60s moments → clip specs. | Anthropic API | ✅ `src/clipper/` |
+| **Cutter** | Cut each segment, reframe to 9:16, burn in captions. | `ffmpeg` | ✅ `src/cutter/` |
+| **Publisher** ♻ | Upload to YouTube / TikTok. | existing `src/publisher/` | ♻ reuse |
 
 ### Shortcut: Higgsfield already has clip tooling
 Higgsfield's CLI/MCP exposes **`clipify`**, **`personal_clipper`**, **`reframe`**
