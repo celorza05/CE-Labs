@@ -13,6 +13,7 @@ env/
 # but don't commit fetched trend data or generated assets.
 data/trends/*.json
 data/scripts/*.json
+data/jobs/*.json
 data/assets/
 
 # OS / editor noise
