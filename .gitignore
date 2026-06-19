@@ -15,6 +15,12 @@ data/trends/*.json
 data/scripts/*.json
 data/jobs/*.json
 data/assets/
+data/publish/*.json
+data/publish/tiktok/
+
+# Credentials (never commit) — YouTube OAuth
+client_secret.json
+*_token.json
 
 # OS / editor noise
 .DS_Store

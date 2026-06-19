@@ -5,3 +5,8 @@ python-dotenv>=1.0 # loads credentials/overrides from a local .env file
 
 # Writer (prompt-generator) dependencies.
 anthropic>=0.69    # Claude API client; provides structured outputs (messages.parse) + pydantic
+
+# Publisher (YouTube upload) dependencies.
+google-api-python-client>=2.0   # YouTube Data API v3
+google-auth-oauthlib>=1.0       # OAuth 2.0 browser flow
+google-auth-httplib2>=0.2       # auth transport

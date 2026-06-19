@@ -91,8 +91,8 @@ Status legend: [ ] not started · [~] in progress · [x] done
 | `trend-fetcher` | Scout | [x] | Pull from AI-specific sources, filter to niche, dedupe, rank. Runs on a schedule. (`src/scout/`) |
 | `prompt-generator` | Writer | [x] | Calls the Anthropic API so Claude writes the hook + script + Higgsfield prompt. (`src/writer/`) |
 | `higgsfield-client` | Producer | [x] | Plans jobs from scripts; generates + downloads video via the official Higgsfield CLI. (`src/producer/`) |
-| `upload-youtube` | Publisher | [ ] | YouTube Data API v3 (`videos.insert`). Real, scriptable API. |
-| `upload-tiktok` | Publisher | [ ] | **Gated** — see §6. Manual hand-off until/unless API access is approved. |
+| `upload-youtube` | Publisher | [x] | YouTube Data API v3 (`videos.insert`), OAuth, private by default. (`src/publisher/`) |
+| `upload-tiktok` | Publisher | [x] | Manual hand-off package (video + caption) — Content Posting API still gated. (`src/publisher/`) |
 | `orchestrator` | Orchestrator | [ ] | Sequences stages, posts to Slack, enforces approval gate. Lives in Cowork. |
 
 ### Suggested repo layout
