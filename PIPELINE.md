@@ -93,7 +93,7 @@ Status legend: [ ] not started · [~] in progress · [x] done
 | `higgsfield-client` | Producer | [x] | Plans jobs from scripts; generates + downloads video via the official Higgsfield CLI. (`src/producer/`) |
 | `upload-youtube` | Publisher | [x] | YouTube Data API v3 (`videos.insert`), OAuth, private by default. (`src/publisher/`) |
 | `upload-tiktok` | Publisher | [x] | Manual hand-off package (video + caption) — Content Posting API still gated. (`src/publisher/`) |
-| `orchestrator` | Orchestrator | [ ] | Sequences stages, posts to Slack, enforces approval gate. Lives in Cowork. |
+| `orchestrator` | Orchestrator | [x] | Sequences stages, posts to Slack, enforces the prepare→approve→publish gate. (`src/orchestrator/`) |
 
 ### Suggested repo layout
 
