@@ -28,9 +28,10 @@ FFMPEG_BIN: str = os.getenv("CUTTER_FFMPEG_BIN", "ffmpeg")
 # via OpenCV). Face mode needs opencv-python.
 REFRAME: str = os.getenv("CUTTER_REFRAME", "center")
 REFRAME_SAMPLE_FPS: float = float(os.getenv("CUTTER_REFRAME_SAMPLE_FPS", "2.0"))
-# Scene-cut sensitivity for aligning crop changes to camera cuts (0-1; lower =
-# more cuts detected).
-REFRAME_SCENE_THRESHOLD: float = float(os.getenv("CUTTER_REFRAME_SCENE_THRESHOLD", "0.3"))
+# A speaker switch is detected when the face jumps more than this fraction of the
+# frame width (and stays). Big enough to ignore jitter, small enough to catch a
+# left<->right camera cut.
+REFRAME_JUMP_FRACTION: float = float(os.getenv("CUTTER_REFRAME_JUMP_FRACTION", "0.15"))
 
 # Output canvas (vertical 9:16).
 WIDTH: int = _env_int("CUTTER_WIDTH", 1080)

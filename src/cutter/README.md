@@ -31,14 +31,15 @@ python -m src.cutter                      # cut all clips (center crop)
 - **Reframe to 9:16** — two modes:
   - **`center`** (default): fixed center-crop. Fast; good when the speaker is centered.
   - **`face`**: follows the speaker's face via OpenCV (`--reframe face`, needs
-    `opencv-python`). It detects the camera cuts (ffmpeg scene score) and uses
-    **one stable crop per shot** — the median face position for that shot — so the
-    crop switches *exactly* when the camera does and holds still within a shot (no
-    lag-flash at cuts, no jitter mid-shot). Since podcasts cut to whoever's
-    talking, "largest face in the shot" tracks the speaker well.
-    *(In a static two-shot where both are on screen, it picks the larger face, not
-    necessarily the talker — that's where Higgsfield's reframe would do better.
-    Tune cut sensitivity with `CUTTER_REFRAME_SCENE_THRESHOLD`.)*
+    `opencv-python`). It samples the face position and **splits the clip into
+    shots wherever the face jumps and stays** (a left↔right camera cut), giving
+    one stable crop per shot. The crop switches exactly when the speaker does and
+    holds still within a shot — no lag-flash, no mid-shot jitter. (Detecting the
+    switch from the *face position* rather than a full-frame scene score is robust
+    to podcasts where both shots share the same studio background.)
+    *(In a static two-shot where both are on screen at once, it picks the larger
+    face, not necessarily the talker — that's where Higgsfield's reframe would do
+    better. Tune switch sensitivity with `CUTTER_REFRAME_JUMP_FRACTION`.)*
 - **Burn captions** — transcript segments inside the clip window, re-timed to the
   clip and rendered as styled ASS subtitles (big, bold, centered, outlined).
 - **Audio-only sources** (podcasts): renders captions over a solid background so
