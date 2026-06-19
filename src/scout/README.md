@@ -14,10 +14,10 @@ sources ── Hacker News ─┐
 ```
 
 - **Hacker News** — front page + recent AI search, via the free Algolia API (no key).
-- **Reddit** — hot posts from AI subreddits. Anonymous `.json` is blocked from
-  many IPs, so set free OAuth credentials (see Configuration) for reliable results.
 - **RSS** — AI sections of TechCrunch, The Verge, VentureBeat, Ars Technica.
 - **Google Trends** — trending searches via Google's official Trending RSS feed (no key).
+- **Reddit** *(off by default)* — hot posts from AI subreddits. Anonymous requests
+  are IP-blocked, so it needs free OAuth credentials; enable it via the env vars below.
 
 Every source **fails soft**: if one is down or rate-limited, Scout logs a warning
 and carries on with the rest.
@@ -77,11 +77,10 @@ Runs with **no API keys**. Everything is tunable via environment variables —
 see [`.env.example`](../../.env.example) (sources to enable, subreddits, RSS
 feeds, how many trends to keep, ranking weights, per-source diversity cap).
 
-**Reddit** is the one source that benefits from credentials: anonymous requests
-are blocked from many IPs, so create a free "script" app at
-<https://www.reddit.com/prefs/apps> and set `SCOUT_REDDIT_CLIENT_ID` /
-`SCOUT_REDDIT_CLIENT_SECRET` to fetch via OAuth. Without them Scout still runs;
-it just skips Reddit if the public endpoint blocks it.
+**Reddit is disabled by default** because anonymous requests are IP-blocked. To
+turn it on, create a free "script" app at <https://www.reddit.com/prefs/apps>,
+then set `SCOUT_ENABLE_REDDIT=true` plus `SCOUT_REDDIT_CLIENT_ID` /
+`SCOUT_REDDIT_CLIENT_SECRET` (an OAuth fetch path is already implemented).
 
 A **per-source diversity cap** (`SCOUT_MAX_PER_SOURCE`, default 6) stops any one
 feed or subreddit from dominating the final list.

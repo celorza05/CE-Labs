@@ -56,7 +56,10 @@ USER_AGENT: str = os.getenv(
 
 # --- Source toggles -------------------------------------------------------
 ENABLE_HACKER_NEWS: bool = _env_bool("SCOUT_ENABLE_HACKER_NEWS", True)
-ENABLE_REDDIT: bool = _env_bool("SCOUT_ENABLE_REDDIT", True)
+# Reddit is off by default: it needs OAuth credentials (a free "script" app)
+# because anonymous requests are IP-blocked. Set SCOUT_ENABLE_REDDIT=true plus
+# the credentials below to turn it on.
+ENABLE_REDDIT: bool = _env_bool("SCOUT_ENABLE_REDDIT", False)
 ENABLE_RSS: bool = _env_bool("SCOUT_ENABLE_RSS", True)
 ENABLE_GOOGLE_TRENDS: bool = _env_bool("SCOUT_ENABLE_GOOGLE_TRENDS", True)
 
