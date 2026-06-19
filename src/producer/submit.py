@@ -131,6 +131,34 @@ def download_asset(url: str, dest_path: str) -> None:
                     fh.write(chunk)
 
 
+def _run_cli(cmd: list[str]) -> subprocess.CompletedProcess:
+    """Run the CLI, handling the Windows npm-shim case.
+
+    npm installs CLIs as ``.cmd`` shims, which Windows' process launcher can't
+    execute directly from ``subprocess`` — they must go through the shell. We
+    resolve the real launcher with ``shutil.which`` and, on Windows, route a
+    ``.cmd``/``.bat`` shim through the shell.
+    """
+    exe = shutil.which(cmd[0])
+    if exe is None:
+        raise FileNotFoundError(cmd[0])
+    full = [exe, *cmd[1:]]
+    if os.name == "nt" and exe.lower().endswith((".cmd", ".bat")):
+        return subprocess.run(
+            subprocess.list2cmdline(full),
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=config.CLI_TIMEOUT,
+        )
+    return subprocess.run(
+        full,
+        capture_output=True,
+        text=True,
+        timeout=config.CLI_TIMEOUT,
+    )
+
+
 def submit_job(job: GenerationJob, dry_run: bool = False) -> GenerationJob:
     """Generate one job's video. Mutates and returns the job."""
     cmd = build_command(job)
@@ -139,7 +167,7 @@ def submit_job(job: GenerationJob, dry_run: bool = False) -> GenerationJob:
         return job
 
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=config.CLI_TIMEOUT)
+        proc = _run_cli(cmd)
     except FileNotFoundError:
         job.status = "failed"
         job.error = f"CLI '{config.CLI_BIN}' not found — run: npm install -g @higgsfield/cli"
