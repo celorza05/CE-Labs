@@ -19,18 +19,23 @@ Free and local — needs **ffmpeg** on your PATH.
 ## Run
 
 ```bash
-python -m src.cutter --dry-run     # print the ffmpeg commands; cut nothing
-python -m src.cutter --limit 1     # cut just the first clip (check it looks right)
-python -m src.cutter               # cut all clips
+python -m src.cutter --dry-run            # print the ffmpeg commands; cut nothing
+python -m src.cutter --limit 1            # cut just the first clip (check it looks right)
+python -m src.cutter --reframe face --limit 1   # face-following crop (needs opencv-python)
+python -m src.cutter                      # cut all clips (center crop)
 ```
 
 ## What it does per clip
 
 - **Cut** `[start, end]` from the source (fast input seek).
-- **Reframe to 9:16** — center-crop to vertical, scale to 1080×1920. (Simple
-  center-crop; good for centered talking-head footage. Face-tracking crop is a
-  future upgrade if framing isn't tight enough — or switch the Cutter to
-  Higgsfield's `reframe`.)
+- **Reframe to 9:16** — two modes:
+  - **`center`** (default): fixed center-crop. Fast; good when the speaker is centered.
+  - **`face`**: follows the speaker's face via OpenCV (`--reframe face`, needs
+    `opencv-python`). Samples faces across the clip and builds a time-varying crop
+    that re-centers when the camera cuts to a different person. Since podcasts cut
+    to whoever's talking, "largest face in the shot" tracks the speaker well.
+    *(In a static two-shot where both are on screen, it picks the larger face, not
+    necessarily the talker — that's where Higgsfield's reframe would do better.)*
 - **Burn captions** — transcript segments inside the clip window, re-timed to the
   clip and rendered as styled ASS subtitles (big, bold, centered, outlined).
 - **Audio-only sources** (podcasts): renders captions over a solid background so

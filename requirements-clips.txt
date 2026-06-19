@@ -1,4 +1,5 @@
 # Extra dependencies for the clips pipeline (heavier — install on top of requirements.txt).
 yt-dlp>=2024.1          # Sourcer: download from YouTube and other sites
 openai-whisper>=20231117 # Transcriber: local speech-to-text (pulls in torch; needs ffmpeg on PATH)
+opencv-python>=4.8      # Cutter: face-aware reframe (--reframe face)
 # feedparser and requests come from requirements.txt (used by the Sourcer too).

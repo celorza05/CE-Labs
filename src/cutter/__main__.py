@@ -15,12 +15,14 @@ import argparse
 import logging
 import sys
 
-from . import cutter
+from . import config, cutter
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="cutter", description="Cut vertical clips with captions via ffmpeg.")
     parser.add_argument("--limit", type=int, default=None, help="cut at most N clips")
+    parser.add_argument("--reframe", choices=["center", "face"], default=None,
+                        help="crop mode: center (default) or face (follow the speaker, needs opencv-python)")
     parser.add_argument("--dry-run", action="store_true", help="print ffmpeg commands; cut nothing")
     parser.add_argument("--verbose", "-v", action="store_true", help="debug logging")
     return parser.parse_args(argv)
@@ -32,6 +34,8 @@ def main(argv: list[str] | None = None) -> int:
         level=logging.DEBUG if args.verbose else logging.INFO,
         format="%(levelname)s %(name)s: %(message)s",
     )
+    if args.reframe is not None:
+        config.REFRAME = args.reframe
     try:
         results, report = cutter.run(limit=args.limit, dry_run=args.dry_run)
     except FileNotFoundError as exc:

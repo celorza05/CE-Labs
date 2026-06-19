@@ -24,6 +24,11 @@ def _env_int(name: str, default: int) -> int:
 
 FFMPEG_BIN: str = os.getenv("CUTTER_FFMPEG_BIN", "ffmpeg")
 
+# Reframing: "center" (fixed center-crop) or "face" (follow the speaker's face
+# via OpenCV). Face mode needs opencv-python.
+REFRAME: str = os.getenv("CUTTER_REFRAME", "center")
+REFRAME_SAMPLE_FPS: float = float(os.getenv("CUTTER_REFRAME_SAMPLE_FPS", "2.0"))
+
 # Output canvas (vertical 9:16).
 WIDTH: int = _env_int("CUTTER_WIDTH", 1080)
 HEIGHT: int = _env_int("CUTTER_HEIGHT", 1920)

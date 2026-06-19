@@ -9,7 +9,7 @@ import re
 import shutil
 import subprocess
 
-from . import captions, config
+from . import captions, config, reframe
 
 log = logging.getLogger("cutter")
 
@@ -29,12 +29,31 @@ def _load(path: str, key: str | None):
     return data.get(key) if key else data
 
 
+def _center_crop() -> str:
+    return "crop='min(iw,ih*9/16)':ih"
+
+
+def resolve_crop(media_abspath: str, has_video: bool, start: float, duration: float, dry_run: bool) -> str:
+    """Choose the crop filter: center, or face-following when enabled."""
+    if not has_video or config.REFRAME != "face":
+        return _center_crop()
+    if dry_run:
+        log.info("[dry-run] face reframe runs at cut time; showing center crop")
+        return _center_crop()
+    try:
+        cf = reframe.crop_filter(media_abspath, start, duration)
+    except RuntimeError as exc:
+        log.warning("face reframe unavailable (%s); using center crop", exc)
+        return _center_crop()
+    return cf or _center_crop()
+
+
 def build_command(media_abspath: str, has_video: bool, start: float, duration: float,
-                  ass_name: str, out_name: str) -> list[str]:
+                  ass_name: str, out_name: str, crop_filter: str) -> list[str]:
     """ffmpeg argv. ``ass_name``/``out_name`` are basenames (run with cwd=OUTPUT_DIR)."""
     w, h = config.WIDTH, config.HEIGHT
     if has_video:
-        vf = f"crop='min(iw,ih*9/16)':ih,scale={w}:{h},ass={ass_name}"
+        vf = f"{crop_filter},scale={w}:{h},ass={ass_name}"
         return [
             config.FFMPEG_BIN, "-y",
             "-ss", f"{start}", "-i", media_abspath, "-t", f"{duration}",
@@ -79,9 +98,11 @@ def cut_one(clip: dict, source: dict, segments: list[dict], index: int, dry_run:
 
     caps = captions.segments_in_clip(segments, start, end)
     ass_text = captions.build_ass(caps)
+    has_video = bool(source.get("has_video"))
 
     if dry_run:
-        cmd = build_command(media_abspath, bool(source.get("has_video")), start, duration, ass_name, out_name)
+        crop = resolve_crop(media_abspath, has_video, start, duration, dry_run=True)
+        cmd = build_command(media_abspath, has_video, start, duration, ass_name, out_name, crop)
         log.info("[dry-run] (%d captions) ffmpeg %s", len(caps), " ".join(cmd[1:]))
         result["status"] = "planned"
         return result
@@ -89,7 +110,8 @@ def cut_one(clip: dict, source: dict, segments: list[dict], index: int, dry_run:
     with open(os.path.join(config.OUTPUT_DIR, ass_name), "w", encoding="utf-8") as fh:
         fh.write(ass_text)
 
-    cmd = build_command(media_abspath, bool(source.get("has_video")), start, duration, ass_name, out_name)
+    crop = resolve_crop(media_abspath, has_video, start, duration, dry_run=False)
+    cmd = build_command(media_abspath, has_video, start, duration, ass_name, out_name, crop)
     try:
         proc = _run_ffmpeg(cmd)
     except FileNotFoundError:
