@@ -9,6 +9,16 @@ from __future__ import annotations
 
 import os
 
+# Load a local .env file if one exists, so credentials and overrides in .env
+# take effect without being exported into the shell. No-op if python-dotenv
+# isn't installed or there's no .env.
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    pass
+
 
 def _env_int(name: str, default: int) -> int:
     raw = os.getenv(name)
