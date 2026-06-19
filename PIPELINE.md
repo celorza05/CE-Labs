@@ -88,8 +88,8 @@ Status legend: [ ] not started · [~] in progress · [x] done
 
 | Module | Maps to | Status | Notes |
 |--------|---------|--------|-------|
-| `trend-fetcher` | Scout | [ ] | Pull from AI-specific sources, filter to niche, dedupe, rank. Runs on a schedule. |
-| `prompt-generator` | Writer | [ ] | Calls the Anthropic API so Claude writes the hook + script + Higgsfield prompt. |
+| `trend-fetcher` | Scout | [x] | Pull from AI-specific sources, filter to niche, dedupe, rank. Runs on a schedule. (`src/scout/`) |
+| `prompt-generator` | Writer | [x] | Calls the Anthropic API so Claude writes the hook + script + Higgsfield prompt. (`src/writer/`) |
 | `higgsfield-client` | Producer | [ ] | Calls Higgsfield generation API, polls for completion, downloads finished assets. |
 | `upload-youtube` | Publisher | [ ] | YouTube Data API v3 (`videos.insert`). Real, scriptable API. |
 | `upload-tiktok` | Publisher | [ ] | **Gated** — see §6. Manual hand-off until/unless API access is approved. |
