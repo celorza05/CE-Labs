@@ -53,15 +53,17 @@ def build_command(media_abspath: str, has_video: bool, start: float, duration: f
     """ffmpeg argv. ``ass_name``/``out_name`` are basenames (run with cwd=OUTPUT_DIR)."""
     w, h = config.WIDTH, config.HEIGHT
     if has_video:
-        vf = f"{crop_filter},scale={w}:{h},ass={ass_name}"
+        # fps filter (first in the chain) forces a true constant frame rate inside
+        # the filtergraph — more reliable than -vsync for VFR YouTube sources, which
+        # otherwise glitch for the first couple seconds on upload.
+        vf = f"fps={config.FPS},{crop_filter},scale={w}:{h},ass={ass_name}"
         return [
             config.FFMPEG_BIN, "-y",
             "-ss", f"{start}", "-i", media_abspath, "-t", f"{duration}",
             "-vf", vf,
-            "-r", str(config.FPS), "-vsync", "cfr",
             "-pix_fmt", "yuv420p",
-            "-c:v", "libx264", "-preset", "veryfast",
-            "-c:a", "aac", "-ar", "44100",
+            "-c:v", "libx264", "-preset", "veryfast", "-g", str(config.FPS * 2),
+            "-c:a", "aac", "-ar", "48000",
             "-af", "aresample=async=1:first_pts=0",
             "-avoid_negative_ts", "make_zero", "-movflags", "+faststart",
             out_name,
@@ -74,8 +76,8 @@ def build_command(media_abspath: str, has_video: bool, start: float, duration: f
         "-vf", f"ass={ass_name}",
         "-map", "0:v", "-map", "1:a",
         "-pix_fmt", "yuv420p",
-        "-c:v", "libx264", "-preset", "veryfast",
-        "-c:a", "aac", "-ar", "44100",
+        "-c:v", "libx264", "-preset", "veryfast", "-g", str(config.FPS * 2),
+        "-c:a", "aac", "-ar", "48000",
         "-af", "aresample=async=1:first_pts=0",
         "-shortest", "-movflags", "+faststart",
         out_name,
