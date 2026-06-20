@@ -36,6 +36,9 @@ REFRAME_JUMP_FRACTION: float = float(os.getenv("CUTTER_REFRAME_JUMP_FRACTION", "
 # Output canvas (vertical 9:16).
 WIDTH: int = _env_int("CUTTER_WIDTH", 1080)
 HEIGHT: int = _env_int("CUTTER_HEIGHT", 1920)
+# Constant output frame rate. YouTube sources are often VFR; forcing CFR avoids
+# the "first few seconds play in slow motion" artifact on upload.
+FPS: int = _env_int("CUTTER_FPS", 30)
 
 # Caption styling (burned in via ASS).
 FONT_NAME: str = os.getenv("CUTTER_FONT_NAME", "Arial")

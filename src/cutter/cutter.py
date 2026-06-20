@@ -58,17 +58,26 @@ def build_command(media_abspath: str, has_video: bool, start: float, duration: f
             config.FFMPEG_BIN, "-y",
             "-ss", f"{start}", "-i", media_abspath, "-t", f"{duration}",
             "-vf", vf,
-            "-c:v", "libx264", "-c:a", "aac", "-movflags", "+faststart",
+            "-r", str(config.FPS), "-vsync", "cfr",
+            "-pix_fmt", "yuv420p",
+            "-c:v", "libx264", "-preset", "veryfast",
+            "-c:a", "aac", "-ar", "44100",
+            "-af", "aresample=async=1:first_pts=0",
+            "-avoid_negative_ts", "make_zero", "-movflags", "+faststart",
             out_name,
         ]
     # Audio-only: solid background canvas + the seeked audio + burned captions.
     return [
         config.FFMPEG_BIN, "-y",
-        "-f", "lavfi", "-i", f"color=c={config.BG_COLOR}:s={w}x{h}",
+        "-f", "lavfi", "-i", f"color=c={config.BG_COLOR}:s={w}x{h}:r={config.FPS}",
         "-ss", f"{start}", "-i", media_abspath, "-t", f"{duration}",
         "-vf", f"ass={ass_name}",
         "-map", "0:v", "-map", "1:a",
-        "-c:v", "libx264", "-c:a", "aac", "-shortest",
+        "-pix_fmt", "yuv420p",
+        "-c:v", "libx264", "-preset", "veryfast",
+        "-c:a", "aac", "-ar", "44100",
+        "-af", "aresample=async=1:first_pts=0",
+        "-shortest", "-movflags", "+faststart",
         out_name,
     ]
 
