@@ -126,6 +126,63 @@ def run(*, do_youtube: bool, privacy: str | None, limit: int | None, dry_run: bo
     return results, path
 
 
+def _load_clip_items() -> list[tuple[dict, dict]]:
+    """Build (job, script) pairs from the Clipper's clips.json + the Cutter's report.
+
+    Clips and report entries are in the same order (the Cutter processes clips.json
+    in order), so they're joined by index.
+    """
+    clips_doc = _read_json(config.CLIPS_INPUT)
+    clips = clips_doc.get("clips", [])
+    source = clips_doc.get("source", {})
+    report = []
+    if os.path.exists(config.CLIPS_REPORT):
+        report = _read_json(config.CLIPS_REPORT).get("results", [])
+
+    items: list[tuple[dict, dict]] = []
+    for i, clip in enumerate(clips):
+        entry = report[i] if i < len(report) else {}
+        asset = entry.get("output") if entry.get("status") == "done" else None
+        job = {
+            "job_id": entry.get("clip") or f"{i + 1:02d}-clip",
+            "asset_path": asset,
+        }
+        script = {
+            "title": clip.get("title", ""),
+            "caption": clip.get("caption", ""),
+            "hashtags": clip.get("hashtags", []),
+            "source_url": source.get("url", ""),
+        }
+        items.append((job, script))
+    return items
+
+
+def _read_json(path: str) -> dict:
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"{path} not found — run the clips pipeline first.")
+    with open(path, encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def run_clips(*, do_youtube: bool, privacy: str | None, limit: int | None, dry_run: bool) -> tuple[list[PublishResult], str]:
+    """Publish the motivational clips (from data/clips/) instead of the main pipeline."""
+    items = _load_clip_items()
+    if not dry_run:
+        items = [(j, s) for j, s in items if j.get("asset_path") and os.path.exists(j["asset_path"])]
+        if not items:
+            log.info("no cut clips found yet — run the Cutter first")
+    if limit is not None:
+        items = items[:limit]
+
+    use_privacy = privacy or config.YOUTUBE_PRIVACY
+    results = [
+        publish_item(j, s, do_youtube=do_youtube, privacy=use_privacy, dry_run=dry_run)
+        for j, s in items
+    ]
+    path = _write_report(results, do_youtube=do_youtube, privacy=use_privacy, dry_run=dry_run)
+    return results, path
+
+
 def _write_report(results: list[PublishResult], *, do_youtube: bool, privacy: str, dry_run: bool) -> str:
     os.makedirs(config.PUBLISH_DIR, exist_ok=True)
     payload = {

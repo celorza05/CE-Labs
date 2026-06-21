@@ -75,3 +75,16 @@ the `.mp4` and a `caption.txt` — a human posts it through the TikTok app.
 
 The **Orchestrator** sequences Scout → Writer → Producer → Publisher, posts
 status to Slack, and holds the human approval gate before this stage publishes.
+
+## Publishing clips (the clips pipeline)
+
+`--clips` publishes the motivational clips from `data/clips/` (the Clipper's
+`clips.json` + the Cutter's `data/clips/out/`) instead of the main pipeline:
+
+```bash
+python -m src.publisher --clips --dry-run            # preview clip metadata
+python -m src.publisher --clips --youtube --limit 1  # upload one clip (private)
+```
+
+Usually you'd drive this via the clips Orchestrator (`src/clips_orchestrator/`),
+which adds the Slack approval gate.

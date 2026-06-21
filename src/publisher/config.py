@@ -24,6 +24,11 @@ JOBS_INPUT: str = os.getenv("PUBLISHER_JOBS_INPUT", "data/jobs/latest.json")
 SCRIPTS_INPUT: str = os.getenv("PUBLISHER_SCRIPTS_INPUT", "data/scripts/latest.json")
 PUBLISH_DIR: str = os.getenv("PUBLISHER_OUTPUT_DIR", "data/publish")
 
+# Clips pipeline inputs (for `--clips` mode): the Clipper's metadata + the
+# Cutter's output report.
+CLIPS_INPUT: str = os.getenv("PUBLISHER_CLIPS_INPUT", "data/clips/clips.json")
+CLIPS_REPORT: str = os.getenv("PUBLISHER_CLIPS_REPORT", "data/clips/out/report.json")
+
 # --- YouTube (Data API v3) ------------------------------------------------
 YOUTUBE_ENABLED: bool = _env_bool("PUBLISHER_YOUTUBE_ENABLED", True)
 # OAuth client secret JSON downloaded from Google Cloud Console (Desktop app).

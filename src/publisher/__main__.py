@@ -22,6 +22,7 @@ from . import publisher
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="publisher", description="Publish videos to YouTube / TikTok.")
+    parser.add_argument("--clips", action="store_true", help="publish the motivational clips (data/clips/) instead of the main pipeline")
     parser.add_argument("--youtube", action="store_true", help="actually upload to YouTube (default: plan only)")
     parser.add_argument("--privacy", choices=["private", "unlisted", "public"], default=None,
                         help="YouTube privacy (default: private)")
@@ -47,8 +48,9 @@ def main(argv: list[str] | None = None) -> int:
         format="%(levelname)s %(name)s: %(message)s",
     )
 
+    runner = publisher.run_clips if args.clips else publisher.run
     try:
-        results, path = publisher.run(
+        results, path = runner(
             do_youtube=args.youtube, privacy=args.privacy, limit=args.limit, dry_run=args.dry_run
         )
     except FileNotFoundError as exc:

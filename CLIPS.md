@@ -67,8 +67,17 @@ source (rights-cleared) ─► Transcribe ─► Select clips (Claude) ─► Cu
 | **Sourcer** | Take a rights-cleared source file/URL; pull the audio/video. | YouTube (`yt-dlp`), local files, podcast RSS | ✅ `src/sourcer/` |
 | **Transcriber** | Timestamped transcript of the audio. | local OpenAI Whisper | ✅ `src/transcriber/` |
 | **Clipper** | Claude reads the transcript and picks the strongest 20–60s moments → clip specs. | Anthropic API | ✅ `src/clipper/` |
-| **Cutter** | Cut each segment, reframe to 9:16, burn in captions. | `ffmpeg` | ✅ `src/cutter/` |
-| **Publisher** ♻ | Upload to YouTube / TikTok. | existing `src/publisher/` | ♻ reuse |
+| **Cutter** | Cut each segment, reframe to 9:16 (face-follow), burn in captions, platform-safe encode. | `ffmpeg` + OpenCV | ✅ `src/cutter/` |
+| **Publisher** ♻ | Upload to YouTube / TikTok. | existing `src/publisher/` (`--clips`) | ✅ reuse |
+| **Orchestrator** | Sequence the stages + Slack approval gate. | `src/clips_orchestrator/` | ✅ |
+
+### End-to-end
+
+```bash
+python -m src.clips_orchestrator prepare "https://youtu.be/VIDEO" --reframe face
+#   ... review data/clips/out/ ...
+python -m src.clips_orchestrator publish --youtube
+```
 
 ### Shortcut: Higgsfield already has clip tooling
 Higgsfield's CLI/MCP exposes **`clipify`**, **`personal_clipper`**, **`reframe`**
