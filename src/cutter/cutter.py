@@ -53,19 +53,19 @@ def build_command(media_abspath: str, has_video: bool, start: float, duration: f
     """ffmpeg argv. ``ass_name``/``out_name`` are basenames (run with cwd=OUTPUT_DIR)."""
     w, h = config.WIDTH, config.HEIGHT
     if has_video:
-        # fps filter (first in the chain) forces a true constant frame rate inside
-        # the filtergraph — more reliable than -vsync for VFR YouTube sources, which
-        # otherwise glitch for the first couple seconds on upload.
-        vf = f"fps={config.FPS},{crop_filter},scale={w}:{h},ass={ass_name}"
+        # setpts/asetpts reset both streams to start at PTS 0 (the cut leaves a small
+        # offset that TikTok mis-handles as a stutter); fps filter forces true CFR.
+        vf = f"setpts=PTS-STARTPTS,fps={config.FPS},{crop_filter},scale={w}:{h},ass={ass_name}"
         return [
             config.FFMPEG_BIN, "-y",
             "-ss", f"{start}", "-i", media_abspath, "-t", f"{duration}",
             "-vf", vf,
+            "-af", "asetpts=PTS-STARTPTS,aresample=async=1",
             "-pix_fmt", "yuv420p",
             "-c:v", "libx264", "-preset", "veryfast", "-g", str(config.FPS * 2),
             "-c:a", "aac", "-ar", "48000",
-            "-af", "aresample=async=1:first_pts=0",
-            "-avoid_negative_ts", "make_zero", "-movflags", "+faststart",
+            "-avoid_negative_ts", "make_zero", "-muxpreload", "0", "-muxdelay", "0",
+            "-movflags", "+faststart",
             out_name,
         ]
     # Audio-only: solid background canvas + the seeked audio + burned captions.
@@ -74,11 +74,12 @@ def build_command(media_abspath: str, has_video: bool, start: float, duration: f
         "-f", "lavfi", "-i", f"color=c={config.BG_COLOR}:s={w}x{h}:r={config.FPS}",
         "-ss", f"{start}", "-i", media_abspath, "-t", f"{duration}",
         "-vf", f"ass={ass_name}",
+        "-af", "asetpts=PTS-STARTPTS,aresample=async=1",
         "-map", "0:v", "-map", "1:a",
         "-pix_fmt", "yuv420p",
         "-c:v", "libx264", "-preset", "veryfast", "-g", str(config.FPS * 2),
         "-c:a", "aac", "-ar", "48000",
-        "-af", "aresample=async=1:first_pts=0",
+        "-avoid_negative_ts", "make_zero", "-muxpreload", "0", "-muxdelay", "0",
         "-shortest", "-movflags", "+faststart",
         out_name,
     ]
