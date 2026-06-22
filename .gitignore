@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Secrets / local config
+.env
+
+# Pipeline output (generated, not source). Keep the directory via .gitkeep,
+# but don't commit fetched trend data or generated assets.
+data/trends/*.json
+data/scripts/*.json
+data/jobs/*.json
+data/assets/
+data/publish/*.json
+data/publish/tiktok/
+data/orchestrator/*.json
+
+# Credentials (never commit) — YouTube OAuth
+client_secret.json
+*_token.json
+
+# OS / editor noise
+.DS_Store
+.idea/
+.vscode/
