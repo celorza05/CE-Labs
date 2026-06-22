@@ -68,10 +68,23 @@ the `.mp4` and a `caption.txt` — a human posts it through the TikTok app.
 | `PUBLISHER_YOUTUBE_CLIENT_SECRET` | `client_secret.json` | OAuth client JSON. |
 | `PUBLISHER_YOUTUBE_TOKEN_FILE` | `data/publish/youtube_token.json` | Cached token. |
 | `PUBLISHER_YOUTUBE_PRIVACY` | `private` | `private` · `unlisted` · `public`. |
-| `PUBLISHER_YOUTUBE_CATEGORY_ID` | `28` | 28 = Science & Technology. |
+| `PUBLISHER_YOUTUBE_CATEGORY_ID` | `22` | 22 = People & Blogs (24 = Entertainment, 27 = Education, 28 = Science & Tech). |
 | `PUBLISHER_TIKTOK_ENABLED` | `true` | Prepare TikTok hand-off packages. |
 
 ## Next module
 
 The **Orchestrator** sequences Scout → Writer → Producer → Publisher, posts
 status to Slack, and holds the human approval gate before this stage publishes.
+
+## Publishing clips (the clips pipeline)
+
+`--clips` publishes the motivational clips from `data/clips/` (the Clipper's
+`clips.json` + the Cutter's `data/clips/out/`) instead of the main pipeline:
+
+```bash
+python -m src.publisher --clips --dry-run            # preview clip metadata
+python -m src.publisher --clips --youtube --limit 1  # upload one clip (private)
+```
+
+Usually you'd drive this via the clips Orchestrator (`src/clips_orchestrator/`),
+which adds the Slack approval gate.
