@@ -37,8 +37,8 @@ YOUTUBE_CLIENT_SECRET: str = os.getenv("PUBLISHER_YOUTUBE_CLIENT_SECRET", "clien
 YOUTUBE_TOKEN_FILE: str = os.getenv("PUBLISHER_YOUTUBE_TOKEN_FILE", "data/publish/youtube_token.json")
 # Default privacy — PRIVATE so nothing goes public by accident. Override per run.
 YOUTUBE_PRIVACY: str = os.getenv("PUBLISHER_YOUTUBE_PRIVACY", "private")  # private | unlisted | public
-# 28 = Science & Technology.
-YOUTUBE_CATEGORY_ID: str = os.getenv("PUBLISHER_YOUTUBE_CATEGORY_ID", "28")
+# 22 = People & Blogs (fits motivational / talk / podcast-clip content).
+YOUTUBE_CATEGORY_ID: str = os.getenv("PUBLISHER_YOUTUBE_CATEGORY_ID", "22")
 YOUTUBE_MADE_FOR_KIDS: bool = _env_bool("PUBLISHER_YOUTUBE_MADE_FOR_KIDS", False)
 
 # --- TikTok (manual hand-off) ---------------------------------------------
