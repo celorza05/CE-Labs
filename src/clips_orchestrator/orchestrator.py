@@ -38,17 +38,28 @@ def _fmt(seconds: float) -> str:
     return f"{s // 60:d}:{s % 60:02d}"
 
 
+def _attr(obj, name, default=""):
+    return getattr(obj, name) if hasattr(obj, name) else obj.get(name, default)
+
+
 def build_prepare_message(source, clips, cut_results) -> str:
-    title = source.title if hasattr(source, "title") else source.get("title", "source")
+    title = _attr(source, "title", "source")
     lines = [f":scissors: *Clips run* — {len(clips)} clips from _{title}_"]
     done = sum(1 for r in cut_results if r.get("status") == "done")
     for i, c in enumerate(clips, start=1):
-        hook = c.hook if hasattr(c, "hook") else c.get("hook", "")
-        start = c.start_seconds if hasattr(c, "start_seconds") else c.get("start_seconds", 0)
-        end = c.end_seconds if hasattr(c, "end_seconds") else c.get("end_seconds", 0)
-        lines.append(f"{i}. [{_fmt(start)}–{_fmt(end)}] {hook}")
-    lines.append(f"\n:film_frames: Cut {done}/{len(cut_results)} clips to data/clips/out/.")
-    lines.append("\n:white_check_mark: Review, then approve with `python -m src.clips_orchestrator publish`.")
+        clip_title = _attr(c, "title", "")
+        hook = _attr(c, "hook", "")
+        start = _attr(c, "start_seconds", 0)
+        end = _attr(c, "end_seconds", 0)
+        head = f"{i}. *{clip_title}*" if clip_title else f"{i}."
+        lines.append(f"{head}  [{_fmt(start)}–{_fmt(end)}]")
+        if hook:
+            lines.append(f"    _{hook}_")
+    lines.append(f"\n:film_frames: Cut {done}/{len(cut_results)} clips to `data/clips/out/`.")
+    lines.append(
+        "\n:white_check_mark: *To approve*, review the clips then run:\n"
+        "```python -m src.clips_orchestrator publish --youtube --privacy unlisted```"
+    )
     return "\n".join(lines)
 
 
