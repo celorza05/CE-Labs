@@ -61,6 +61,47 @@ def segment_runs(samples: list[tuple[float, float]], jump: float) -> list[tuple[
     return runs
 
 
+def merge_short_runs(
+    runs: list[tuple[float, float, float]], min_seconds: float
+) -> list[tuple[float, float, float]]:
+    """Collapse runs shorter than ``min_seconds`` into the nearest-framed neighbour.
+
+    A real camera cut holds for a beat; a sub-``min_seconds`` run is usually a
+    quick cutaway (or a brief mis-detection) that shouldn't trigger a reframe.
+    Each too-short run is folded into whichever neighbour is closest in face
+    position, so a momentary blip back to speaker A while B is talking keeps the
+    crop on B instead of flickering.
+    """
+    if min_seconds <= 0 or len(runs) <= 1:
+        return runs
+    runs = list(runs)
+    while len(runs) > 1:
+        # Merge the single shortest offending run per pass, then re-evaluate
+        # (merging changes neighbours' spans, so durations must be recomputed).
+        shortest_i = None
+        shortest_dur = min_seconds
+        for i, (st, lt, _c) in enumerate(runs):
+            dur = lt - st
+            if dur < shortest_dur:
+                shortest_dur, shortest_i = dur, i
+        if shortest_i is None:
+            break
+        i = shortest_i
+        st, lt, c = runs[i]
+        prev_i = i - 1 if i > 0 else None
+        next_i = i + 1 if i + 1 < len(runs) else None
+        if prev_i is None:
+            target = next_i
+        elif next_i is None:
+            target = prev_i
+        else:
+            target = prev_i if abs(runs[prev_i][2] - c) <= abs(runs[next_i][2] - c) else next_i
+        ts, tl, tc = runs[target]
+        runs[target] = (min(ts, st), max(tl, lt), tc)  # keep the neighbour's framing
+        del runs[i]
+    return runs
+
+
 def build_x_expr(windows: list[tuple[float, float, int]]) -> str:
     """ffmpeg crop ``x`` expression (piecewise-constant over time t)."""
     if not windows:
@@ -148,9 +189,10 @@ def crop_filter(media: str, start: float, duration: float) -> str | None:
             log.info("no faces detected; using center crop")
             return None
 
-        # 2) split into runs by face-position jumps
+        # 2) split into runs by face-position jumps, then drop flicker-short shots
         jump = src_w * config.REFRAME_JUMP_FRACTION
         runs = segment_runs(samples, jump)
+        runs = merge_short_runs(runs, config.REFRAME_MIN_SHOT_SECONDS)
 
         # 3) refine each boundary to the exact cut frame, then build windows
         windows: list[tuple[float, float, int]] = []

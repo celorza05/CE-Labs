@@ -32,6 +32,10 @@ REFRAME_SAMPLE_FPS: float = float(os.getenv("CUTTER_REFRAME_SAMPLE_FPS", "2.0"))
 # frame width (and stays). Big enough to ignore jitter, small enough to catch a
 # left<->right camera cut.
 REFRAME_JUMP_FRACTION: float = float(os.getenv("CUTTER_REFRAME_JUMP_FRACTION", "0.15"))
+# Minimum seconds a shot must hold before it counts as a real switch. Brief
+# blips (a quick cut back to the other speaker for a second) are merged into the
+# surrounding shot so the vertical crop doesn't flicker on fast back-and-forth.
+REFRAME_MIN_SHOT_SECONDS: float = float(os.getenv("CUTTER_REFRAME_MIN_SHOT_SECONDS", "1.5"))
 
 # Output canvas (vertical 9:16).
 WIDTH: int = _env_int("CUTTER_WIDTH", 1080)

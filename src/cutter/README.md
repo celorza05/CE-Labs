@@ -40,6 +40,10 @@ python -m src.cutter                      # cut all clips (center crop)
     *(In a static two-shot where both are on screen at once, it picks the larger
     face, not necessarily the talker — that's where Higgsfield's reframe would do
     better. Tune switch sensitivity with `CUTTER_REFRAME_JUMP_FRACTION`.)*
+  - **Too many switches?** Shots shorter than `CUTTER_REFRAME_MIN_SHOT_SECONDS`
+    (default `1.5`s) are merged into the surrounding shot, so fast back-and-forth
+    conversation doesn't make the crop flicker. Raise it (e.g. `2.5`) for a
+    calmer cut; lower it to follow quick cuts more closely.
 - **Burn captions** — transcript segments inside the clip window, re-timed to the
   clip and rendered as styled ASS subtitles (big, bold, centered, outlined).
 - **Audio-only sources** (podcasts): renders captions over a solid background so
@@ -61,3 +65,5 @@ adapt the Publisher's job input to `data/clips/out/`.
 | `CUTTER_WIDTH` / `CUTTER_HEIGHT` | `1080` / `1920` | Output canvas. |
 | `CUTTER_FONT_NAME` / `CUTTER_FONT_SIZE` | `Arial` / `72` | Caption style. |
 | `CUTTER_BG_COLOR` | `black` | Background for audio-only sources. |
+| `CUTTER_REFRAME_JUMP_FRACTION` | `0.15` | Face jump (fraction of width) that marks a speaker switch. |
+| `CUTTER_REFRAME_MIN_SHOT_SECONDS` | `1.5` | Shots shorter than this are merged away (fewer switches). |
